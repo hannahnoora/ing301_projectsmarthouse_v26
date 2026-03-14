@@ -6,6 +6,7 @@ class Measurement:
     def __init__(self, timestamp, value, unit):
         self.timestamp = timestamp
         self.value = value
+        
         self.unit = unit
 
 
