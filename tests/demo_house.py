@@ -14,13 +14,15 @@ livingroom_kitchen = DEMO_HOUSE.register_room(ground_floor, 39.75, "Livingroom/K
 garage = DEMO_HOUSE.register_room(ground_floor, 19, "Garage")
 
 #Registering rooms in second floor
-hallway = DEMO_HOUSE.register_room(second_floor)
-guest_room2 = DEMO_HOUSE.register_room(second_floor)
-master_bedroom = DEMO_HOUSE.register_room(second_floor)
-guest_room3 = DEMO_HOUSE.register_room(second_floor)
-bathroom2 = DEMO_HOUSE.register_room(second_floor)
-dressing_room = DEMO_HOUSE.register_room(second_floor)
-office = DEMO_HOUSE.register_room(second_floor)
+hallway = DEMO_HOUSE.register_room(second_floor, 10, "Hallway")
+guest_room2 = DEMO_HOUSE.register_room(second_floor, 8, "Guest room 2")
+master_bedroom = DEMO_HOUSE.register_room(second_floor, 17, "Master bedroom")
+guest_room3 = DEMO_HOUSE.register_room(second_floor, 10, "Guest room 3")
+bathroom2 = DEMO_HOUSE.register_room(second_floor, 9.25, "Bathroom 2")
+dressing_room = DEMO_HOUSE.register_room(second_floor, 4, "Dressing room")
+office = DEMO_HOUSE.register_room(second_floor, 11.75, "Office")
+
+
 
 
 
