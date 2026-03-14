@@ -40,7 +40,7 @@ dehumidifier_bathroom2 = Actuator('9e5b8274-4e77-4e4e-80d2-b40d648ea02a', 'Dehum
 'DeHumidBathroom2')
 light_guestroom2 = Actuator('6b1c5f6b-37f6-4e3d-9145-1cfbe2f1fc28', 'Light Bulb', 'Elysian Tech', 'Lumina Glow 4000', 'LightGR2')
 
-#Registering devices in rooms
+#Registering devices in correct rooms
 DEMO_HOUSE.register_device(entrance, smartlock_entrance)
 DEMO_HOUSE.register_device(livingroom_kitchen, co2sensor_kitchen)
 DEMO_HOUSE.register_device(entrance, electricitymeter_entrance)

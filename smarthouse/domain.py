@@ -188,7 +188,18 @@ class SmartHouse:
         """
         room.add_device(device)
 
+        return None
     
+    def get_device_by_id(self, device_id):
+        """
+        This method retrieves a device object via its id.
+        """
+        for floor in self.floors:
+            for room in floor.rooms:
+                for device in room.devices:
+                    if device.device_id == device_id:
+                        return device
+                    
     def get_device(self, device_id):
         """
         This method retrieves a device object via its id.

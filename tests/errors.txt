@@ -1,0 +1,60 @@
+ERROR: test_basic_get_device_by_id (__main__.TestPartA.test_basic_get_device_by_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "c:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26\tests\test_part_a.py", line 29, in test_basic_get_device_by_id
+    self.assertEqual(l.id, "4d8b1d62-7921-4917-9b70-bbd31f6e2e8e")
+                     ^^^^
+AttributeError: 'Sensor' object has no attribute 'id'
+
+======================================================================
+ERROR: test_basic_get_no_of_devices (__main__.TestPartA.test_basic_get_no_of_devices)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "c:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26\tests\test_part_a.py", line 21, in test_basic_get_no_of_devices
+    self.assertEqual(len(h.get_devices()), 14)
+                         ^^^^^^^^^^^^^
+AttributeError: 'SmartHouse' object has no attribute 'get_devices'
+
+======================================================================
+ERROR: test_intermediate_actuator_state_change (__main__.TestPartA.test_intermediate_actuator_state_change)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "c:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26\tests\test_part_a.py", line 71, in test_intermediate_actuator_state_change
+    heat_pump.turn_on(21.3)
+    ~~~~~~~~~~~~~~~~~^^^^^^
+TypeError: Actuator.turn_on() takes 1 positional argument but 2 were given
+
+======================================================================
+ERROR: test_intermediate_device_attributes (__main__.TestPartA.test_intermediate_device_attributes)----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "c:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26\tests\test_part_a.py", line 37, in test_intermediate_device_attributes
+    self.assertEqual(motion_sensor.id, "cd5be4e8-0e6b-4cb5-a21f-819d06cf5fc5")
+                     ^^^^^^^^^^^^^^^^
+AttributeError: 'Sensor' object has no attribute 'id'
+
+======================================================================
+ERROR: test_zadvanced_move_device (__main__.TestPartA.test_zadvanced_move_device)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "c:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26\tests\test_part_a.py", line 88, in test_zadvanced_move_device
+    gr2 = bulp.room
+          ^^^^^^^^^
+AttributeError: 'Actuator' object has no attribute 'room'
+
+======================================================================
+FAIL: test_intermediate_sensor_measurements (__main__.TestPartA.test_intermediate_sensor_measurements)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "c:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26\tests\test_part_a.py", line 59, in test_intermediate_sensor_measurements
+    self.assertEqual(m.unit, "°C")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+AssertionError: 'TempMB' != '°C'
+- TempMB
++ °C
+
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.401s
+
+FAILED (failures=1, errors=5)
+PS C:\Users\xhann\OneDrive - Høgskulen på Vestlandet\Skrivebord\Geologi og Geofare\Programmering\ING-302\Prosjekt smarthus\ing301_projectsmarthouse_v26>
