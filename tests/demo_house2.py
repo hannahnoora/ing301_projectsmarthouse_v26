@@ -1,69 +1,39 @@
-from smarthouse.domain import SmartHouse
+devices_list = []
 
-DEMO_HOUSE = SmartHouse()
+# Innholdet fra Devices.txt
+devices_content = """ID,Enhet,Produsent,Modellnavn,Kallenavn
+4d5f1ac6-906a-4fd1-b4bf-3a0671e4c4f1,Smart Lock,MythicalTech,Guardian Lock 7000,LockEntrance
+8a43b2d7-e8d3-4f3d-b832-7dbf37bf629e,CO2 sensor,ElysianTech,Smoke Warden 1000,CO2kitchen
+a2f8690f-2b3a-43cd-90b8-9deea98b42a7,Electricity Meter,MysticEnergy Innovations,Volt Watch Elite,ElEntrance
+5e13cabc-5c58-4bb3-82a2-3039e4480a6d,Heat Pump,ElysianTech,Thermo Smart 6000,HeatLivingroom
+cd5be4e8-0e6b-4cb5-a21f-819d06cf5fc5,Motion Sensor,NebulaGuard Innovations,MoveZ Detect 69,MotionLivingroom
+3d87e5c0-8716-4b0b-9c67-087eaaed7b45,Humidity Sensor,AetherCorp,Aqua Alert 800,HumidBathroom
+8d4e4c98-21a9-4d1e-bf18-523285ad90f6,Smart Oven,AetherCorp,Pheonix HEAT 333,OvenGR1
+9a54c1ec-0cb5-45a7-b20d-2a7349f1b132,Automatic Garage Door,MythicalTech,Guardian Lock 9000,DoorGarage
+c1e8fa9c-4b8d-487a-a1a5-2b148ee9d2d1,Smart Oven,IgnisTech Solutions,Ember Heat 3000,OvenMB
+4d8b1d62-7921-4917-9b70-bbd31f6e2e8e,Temperature Sensor,AetherCorp,SmartTemp 42,TempMB
+7c6e35e1-2d8b-4d81-a586-5d01a03bb02c,Air Quality Sensor,CelestialSense Technologies,AeroGuard Pro,AirGR3
+1a66c3d6-22b2-446e-bf5c-eb5b9d1a8c79,Smart Plug,MysticEnergy Innovations,FlowState X,PlugOffice
+9e5b8274-4e77-4e4e-80d2-b40d648ea02a,Dehumidifier,ArcaneTech Solutions,Hydra Dry 8000,DeHumidBathroom2
+6b1c5f6b-37f6-4e3d-9145-1cfbe2f1fc28,Light Bulb,Elysian Tech,Lumina Glow 4000,LightGR2"""
 
-# Building house structure
-ground_floor = DEMO_HOUSE.register_floor(1)
-entrance = DEMO_HOUSE.register_room(ground_floor, 13.5, "Entrance")
-# TODO: continue registering the remaining floor, rooms and devices
+'''
+# Konverter hver linje til en liste
+for line in devices_content.strip().split("\n")[1:]:  # Skip header line
+    values = line.split(",")
+    devices_list.append(values)
 
-class SmartHouse:
+# Print ut listen
+for device in devices_list:
+    print(device)
+'''
 
-    def __init__(self):
-        self.floors = []
-        self.device_registry = {}
+# Konverter hver linje til en tuple
+for line in devices_content.strip().split("\n")[1:]:  # Skip header line
+    values = line.split(",")
+    device_tuple = tuple(values)  # Konverter liste til tuple
+    devices_list.append(device_tuple)
 
-    def register_floor(self, level):
-
-        floor = Floor(level)
-        self.floors.append(floor)
-        self.floors.sort(key=lambda f: f.level)
-        return floor
-
-
-    def register_room(self, floor, room_size, room_name=None):
-
-        room = Room(room_size, room_name)
-        floor.add_room(room)
-        return room
-
-
-    def get_floors(self):
-        return self.floors
-
-
-    def get_rooms(self):
-
-        rooms = []
-
-        for floor in self.floors:
-            rooms.extend(floor.rooms)
-
-        return rooms
-
-
-    def get_area(self):
-
-        return sum(floor.get_area() for floor in self.floors)
-
-
-    def register_device(self, room, device):
-
-        room.add_device(device)
-
-        self.device_registry[device.id] = device
-
-
-    def get_devices(self):
-
-        devices = []
-
-        for room in self.get_rooms():
-            devices.extend(room.devices)
-
-        return devices
-
-
-    def get_device_by_id(self, device_id):
-
-        return self.device_registry.get(device_id, None)
+# Print ut listen
+for device in devices_list:
+    print(device)
