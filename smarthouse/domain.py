@@ -1,3 +1,7 @@
+import random
+import datetime
+
+
 class Measurement:
     """
     This class represents a measurement taken from a sensor.
@@ -21,6 +25,16 @@ class Device:
         self.device_type = device_type
         self.nickname = nickname
 
+    def is_actuator(self):
+        return isinstance(self, Actuator)
+    
+    def is_sensor(self):
+        return isinstance(self, Sensor)
+    
+    def get_device_type(self):
+        return self.device_type
+    
+
 
 class Sensor(Device):
     """
@@ -30,6 +44,7 @@ class Sensor(Device):
     def __init__(self, device_id, manufacturer, model, device_type, nickname=None):
         super().__init__(device_id, manufacturer, model, device_type, nickname)
         self.measurements = []
+        self.unit = self.unit
 
     def add_measurement(self, measurement):
         self.measurements.append(measurement)
@@ -41,6 +56,12 @@ class Sensor(Device):
 
     def get_measurement_history(self):
         return self.measurements
+    
+    def last_measurement(self):
+        #Simulating random measurement with the current timestamp
+        value = random.uniform(0, 100)
+        timestamp = datetime.datetime.now().isoformat()
+        return Measurement(timestamp, value, self.unit)
 
 
 class Actuator(Device):
@@ -51,6 +72,7 @@ class Actuator(Device):
     def __init__(self, device_id, manufacturer, model, device_type, nickname=None):
         super().__init__(device_id, manufacturer, model, device_type, nickname)
         self.state = False
+        self.target_value = self.target_value
 
     def turn_on(self):
         self.state = True
@@ -58,8 +80,12 @@ class Actuator(Device):
     def turn_off(self):
         self.state = False
 
-    def set_state(self, state):
-        self.state = state
+    def is_active(self):
+        return self.state
+    
+    def set_target_value(self, value):
+        self.target_value = value
+
 
 
 class Room:
@@ -102,7 +128,7 @@ class SmartHouse:
     house's physical layout) as well as register and modify smart devices and their state.
     """
     def __init__(self):
-        self.floors[]
+        self.floors = []
         self.device_registry = {}
     
 
@@ -173,17 +199,3 @@ class SmartHouse:
                     if device.device_id == device_id:
                         return device
         return None
-
-
-house = SmartHouse()
-
-floor1 = house.register_floor(1)
-living_room = house.register_room(floor1, 25, "Living Room")
-
-sensor = Sensor("T100", "Philips", "TempX", "temperature")
-house.register_device(living_room, sensor)
-
-m = Measurement("2026-03-14 10:00", 21.5, "°C")
-sensor.add_measurement(m)
-
-print(sensor.get_latest_measurement().value)
