@@ -42,7 +42,7 @@ class TestPartA(TestCase):
         self.assertFalse(motion_sensor.is_actuator())
         bulp = h.get_device_by_id("6b1c5f6b-37f6-4e3d-9145-1cfbe2f1fc28")
         self.assertEqual(bulp.id, "6b1c5f6b-37f6-4e3d-9145-1cfbe2f1fc28")
-        self.assertEqual(bulp.device_type, "Light Bulp")
+        self.assertEqual(bulp.device_type, "Light Bulb")
         self.assertEqual(bulp.supplier, "Elysian Tech")
         self.assertEqual(bulp.model_name, "Lumina Glow 4000")
         self.assertTrue(bulp.is_actuator())
