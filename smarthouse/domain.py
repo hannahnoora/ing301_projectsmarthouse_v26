@@ -41,10 +41,10 @@ class Sensor(Device):
     A sensor device that records measurements.
     """
 
-    def __init__(self, device_id, manufacturer, model, device_type, nickname=None):
+    def __init__(self, device_id, manufacturer, model, device_type, unit, nickname=None):
         super().__init__(device_id, manufacturer, model, device_type, nickname)
         self.measurements = []
-        self.unit = self.unit
+        self.unit = unit
 
     def add_measurement(self, measurement):
         self.measurements.append(measurement)
@@ -69,10 +69,10 @@ class Actuator(Device):
     A device that can change its state.
     """
 
-    def __init__(self, device_id, manufacturer, model, device_type, nickname=None):
+    def __init__(self, device_id, manufacturer, model, device_type, nickname=None, target_value=None):
         super().__init__(device_id, manufacturer, model, device_type, nickname)
         self.state = False
-        self.target_value = self.target_value
+        self.target_value = target_value
 
     def turn_on(self):
         self.state = True
