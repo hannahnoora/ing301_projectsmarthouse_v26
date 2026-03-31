@@ -186,7 +186,7 @@ class SmartHouse:
                         return device
         return None
     
-    def get_device(self):
+    def get_devices(self):
 
         devices = []
 
