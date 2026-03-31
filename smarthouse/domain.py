@@ -44,7 +44,16 @@ class Sensor(Device):
     def __init__(self, device_id, device_type, supplier, model_name, nickname=None):
         super().__init__(device_id, device_type, supplier, model_name, nickname)
         self.measurements = []
-        self.unit = "°C"
+        if "Temperature" in device_type:
+            self.unit = "°C"
+        elif "CO2" in device_type:
+            self.unit = "ppm"
+        elif "Humidity" in device_type:
+            self.unit = "%"
+        elif "Air Quality" in device_type:
+            self.unit = "AQI"
+        else:
+            self.unit = ""
 
     def add_measurement(self, measurement):
         self.measurements.append(measurement)
