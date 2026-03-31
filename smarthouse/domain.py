@@ -21,6 +21,8 @@ class Device:
     def __init__(self, device_id, device_type, supplier, model_name, nickname=None):
         self.id = device_id
         self.device_type = device_type
+        self.supplier = supplier
+        self.model_name = model_name
         self.nickname = nickname
         self.room = None
 
@@ -42,7 +44,7 @@ class Sensor(Device):
     def __init__(self, device_id, device_type, supplier, model_name, nickname=None):
         super().__init__(device_id, device_type, supplier, model_name, nickname)
         self.measurements = []
-        self.unit = unit
+        self.unit = "°C"
 
     def add_measurement(self, measurement):
         self.measurements.append(measurement)
@@ -57,6 +59,10 @@ class Sensor(Device):
 
     def last_measurement(self):
         #Simulating random measurement with the current timestamp
+        
+        if self.measurements:
+            return self.measurements[-1]
+        
         value = random.uniform(0, 100)
         timestamp = datetime.datetime.now().isoformat()
         return Measurement(timestamp, float(value), self.unit)
@@ -95,6 +101,10 @@ class Room:
         self.devices = []
 
     def add_device(self, device):
+
+        if device.room and device in device.room.devices:
+            device.room.devices.remove(device)
+
         self.devices.append(device)
         device.room = self
 
@@ -161,8 +171,9 @@ class SmartHouse:
         for floor in self.floors:
             for room in floor.rooms:
                 for device in room.devices:
-                    if device.device_id == device_id:
+                    if device.id == device_id:
                         return device
+        return None
                     
     def get_device(self, device_id):
         """
@@ -174,3 +185,12 @@ class SmartHouse:
                     if device.device_id == device_id:
                         return device
         return None
+    
+    def get_device(self):
+
+        devices = []
+
+        for room in self.get_rooms():
+            devices.extend(room.devices)
+
+        return devices
