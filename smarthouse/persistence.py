@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional
-from smarthouse.domain import SmartHouse, Room, Measurement, Sensor, Actuator
+from smarthouse.domain import Measurement
 
 class SmartHouseRepository:
     """
@@ -11,14 +11,9 @@ class SmartHouseRepository:
     def __init__(self, file: str) -> None:
         self.file = file 
         self.conn = sqlite3.connect(file, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row  # gjør at vi kan bruke row["kolonne"] -> ny
 
     def __del__(self):
-        try:
-            self.conn.close()
-        except Exception:
-            pass
-
+        self.conn.close()
 
     def cursor(self) -> sqlite3.Cursor:
         """
@@ -31,11 +26,10 @@ class SmartHouseRepository:
 
     def reconnect(self):
         self.conn.close()
-        self.conn = sqlite3.connect(self.file, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
+        self.conn = sqlite3.connect(self.file)
 
-
-    def load_smarthouse_deep(self) -> SmartHouse:
+    
+    def load_smarthouse_deep(self):
         """
         This method retrives the complete single instance of the _SmartHouse_ 
         object stored in this database. The retrieval yields a _deep_ copy, i.e.
@@ -44,10 +38,8 @@ class SmartHouseRepository:
         """
         # TODO: START here! remove the following stub implementation and implement this function 
         #       by retrieving the data from the database via SQL `SELECT` statements.
-        return NotImplemented
-
-
-    def get_latest_reading(self, sensor) -> Optional[Measurement]:
+        
+    def get_latest_reading(file) -> Optional[Measurement]:
         """
         Retrieves the most recent sensor reading for the given sensor if available.
         Returns None if the given object has no sensor readings.

@@ -7,9 +7,8 @@ sys.path.append(str(Path().parent.absolute()))
 from smarthouse.persistence import SmartHouseRepository
 
 class SmartHouseTest(unittest.TestCase):
-    # Bruk / i stedet for \ og sjekk at navnet stemmer med det du ga den i Steg 1
-    file = Path(__file__).parent.parent / "data/db.sql" 
-    repo = SmartHouseRepository(str(file)) # Vi gjør om Path til tekst-streng for sqlite3
+    file = Path(__file__).parent / "../data/db.sql"
+    repo = SmartHouseRepository(file)
 
     def test_cursor(self):
         c = self.repo.cursor()
