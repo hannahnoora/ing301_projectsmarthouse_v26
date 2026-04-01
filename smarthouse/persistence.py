@@ -107,18 +107,45 @@ class SmartHouseRepository:
         cur.close()
         return h
 
-
-            
-
-
-
     def get_latest_reading(self, sensor) -> Optional[Measurement]:
         """
         Retrieves the most recent sensor reading for the given sensor if available.
         Returns None if the given object has no sensor readings.
         """
-        # TODO: After loading the smarthouse, continue here
-        return NotImplemented
+        # 1. Hent ut ID-en fra sensor-objektet (fungerer for både Sensor og Actuator)
+        # Vi antar her at domene-objektet har attributtet .id
+        sensor_id = sensor.id
+
+        # 2. Bruk den eksisterende cursor-metoden i klassen
+        cur = self.cursor()
+
+        try:
+            # 3. SQL-spørring for å finne den nyeste målingen basert på tidsstempel (ts)
+            # Vi henter ts, value og unit fra measurements-tabellen
+            query = """
+                SELECT ts, value, unit 
+                FROM measurements 
+                WHERE device = ? 
+                ORDER BY ts DESC 
+                LIMIT 1
+            """
+            
+            cur.execute(query, (sensor_id,))
+            row = cur.fetchone()
+
+            # 4. Hvis ingen rader blir funnet (f.eks. for en aktuator uten målinger), 
+            # returneres None, som er det testen "test_basic_read_values" forventer.
+            if row is None:
+                return None
+
+            # 5. Opprett og returner et Measurement-objekt fra domenemodellen.
+            # Siden row_factory er sqlite3.Row, kan vi bruke kolonnenavnene direkte.
+            # Domenemodellens Measurement forventer vanligvis (timestamp, value, unit)
+            return Measurement(row["ts"], row["value"], row["unit"])
+        
+        finally:
+            # Lukk kun cursoren, ikke self.conn, slik at databasen forblir tilgjengelig
+            cur.close()
 
 
     def update_actuator_state(self, actuator):
