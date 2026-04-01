@@ -38,47 +38,16 @@ class SmartHouseRepository:
         """
         # TODO: START here! remove the following stub implementation and implement this function 
         #       by retrieving the data from the database via SQL `SELECT` statements.
-        
-    def get_latest_reading(file) -> Optional[Measurement]:
+        return NotImplemented
+
+
+    def get_latest_reading(self, sensor) -> Optional[Measurement]:
         """
         Retrieves the most recent sensor reading for the given sensor if available.
         Returns None if the given object has no sensor readings.
         """
         # TODO: After loading the smarthouse, continue here
-        # I think I will retrive the sensor id by name first, then use that to find the areas
-        #File-> Tables -> Devices -> room and kind'
-        try:
-            con = sqlite3.connect(file)
-            cur = con.cursor()
-
-            # 2. Spørringen forblir lik, men vi sikrer at vi bruker riktige kolonnenavn
-            query = """
-                SELECT device, ts, value, unit 
-                FROM measurements 
-                WHERE device = ? 
-                ORDER BY ts DESC 
-                LIMIT 1
-            """
-            
-            cur.execute(query, (sensor_id,))
-            row = cur.fetchone()
-            con.close()
-
-            if row is None:
-                return None
-
-            # 3. Pakk ut raden i Measurement-objektet
-            # row[0]=device, row[1]=ts, row[2]=value, row[3]=unit
-            return Measurement(
-                device=row[0],
-                timestamp=row[1],
-                value=row[2],
-                unit=row[3]
-            )
-        
-        except sqlite3.Error:
-            return None
-
+        return NotImplemented
 
 
     def update_actuator_state(self, actuator):
