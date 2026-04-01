@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional
-from smarthouse.domain import Measurement
+from smarthouse.domain import SmartHouse, Room, Measurement, Sensor, Actuator
 
 class SmartHouseRepository:
     """
@@ -11,9 +11,14 @@ class SmartHouseRepository:
     def __init__(self, file: str) -> None:
         self.file = file 
         self.conn = sqlite3.connect(file, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row  # gjør at vi kan bruke row["kolonne"] -> ny
 
     def __del__(self):
-        self.conn.close()
+        try:
+            self.conn.close()
+        except Exception:
+            pass
+
 
     def cursor(self) -> sqlite3.Cursor:
         """
@@ -26,19 +31,85 @@ class SmartHouseRepository:
 
     def reconnect(self):
         self.conn.close()
-        self.conn = sqlite3.connect(self.file)
+        self.conn = sqlite3.connect(self.file, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row
 
-    
-    def load_smarthouse_deep(self):
+
+    def load_smarthouse_deep(self) -> SmartHouse:
         """
         This method retrives the complete single instance of the _SmartHouse_ 
         object stored in this database. The retrieval yields a _deep_ copy, i.e.
         all referenced objects within the object structure (e.g. floors, rooms, devices) 
         are retrieved as well. 
         """
-        # TODO: START here! remove the following stub implementation and implement this function 
-        #       by retrieving the data from the database via SQL `SELECT` statements.
-        return NotImplemented
+        h = SmartHouse()
+        cur = self.cursor()
+
+        # 1. Etasjer: fra rooms.floor
+        cur.execute("SELECT DISTINCT floor FROM rooms ORDER BY floor")
+        floors_by_level = {}
+        for row in cur.fetchall():
+            level = row["floor"]
+            floors_by_level[level] = h.register_floor(level)
+
+        # 2. Rom: rooms(id, floor, area, name)
+        cur.execute("SELECT id, floor, area, name FROM rooms ORDER BY id")
+        rooms_by_id = {}
+        for row in cur.fetchall():
+            room_id = row["id"]
+            floor_level = row["floor"]
+            area = row["area"]
+            name = row["name"]
+
+            floor = floors_by_level[floor_level]
+            room = h.register_room(floor=floor, room_size=area, room_name=name)
+            rooms_by_id[room_id] = room
+
+        # 3. Devices: devices(id, room, kind, category, supplier, product)
+        cur.execute("""
+            SELECT id, room, kind, category, supplier, product
+            FROM devices
+            ORDER BY id
+        """)
+        for row in cur.fetchall():
+            device_id = row["id"]
+            room_id = row["room"]
+            kind = row["kind"]            # f.eks. "Smart Lock", "CO2 sensor" <ref: index=2721409 firstWord=1 lastWord=10/>
+            category = row["category"]    # 'sensor' / 'actuator'
+            supplier = row["supplier"]    # f.eks. "MythicalTech"
+            product = row["product"]      # f.eks. "Guardian Lock 7000"
+
+            room = rooms_by_id.get(room_id)
+            if room is None:
+                continue
+
+            nickname = None  # ingen kolonne for dette i devices-tabellen
+
+            if category.lower() == "sensor":
+                device = Sensor(
+                    device_id=device_id,
+                    device_type=kind,
+                    supplier=supplier,
+                    model_name=product,
+                    nickname=nickname
+                )
+            else:
+                device = Actuator(
+                    device_id=device_id,
+                    manufacturer=supplier,
+                    model=product,
+                    device_type=kind,
+                    nickname=nickname
+                )
+
+            h.register_device(room, device)
+
+        cur.close()
+        return h
+
+
+            
+
 
 
     def get_latest_reading(self, sensor) -> Optional[Measurement]:
