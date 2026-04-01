@@ -65,12 +65,13 @@ class SmartHouseRepository:
             room = h.register_room(floor=floor, room_size=area, room_name=name)
             rooms_by_id[room_id] = room
 
-        # 3. Devices: devices(id, room, kind, category, supplier, product)
+        # 3. Devices: Her legger vi på LEFT JOIN for å få med 'state'
         cur.execute("""
-            SELECT id, room, kind, category, supplier, product
-            FROM devices
-            ORDER BY id
-        """)
+            SELECT d.id, d.room, d.kind, d.category, d.supplier, d.product, s.state
+            FROM devices d
+            LEFT JOIN actuator_states s ON d.id = s.device_id
+            ORDER BY d.id
+            """)
         for row in cur.fetchall():
             device_id = row["id"]
             room_id = row["room"]
@@ -101,6 +102,12 @@ class SmartHouseRepository:
                     device_type=kind,
                     nickname=nickname
                 )
+                # NYTT: Her må vi faktisk sette tilstanden vi hentet fra databasen!
+                # Vi henter 'state' fra raden (takket være LEFT JOIN i SQL-en din)
+                db_state = row["state"]
+                if db_state is not None:
+                    # Sjekk om det heter .state eller .value i domain.py
+                    device.state = db_state 
 
             h.register_device(room, device)
 
@@ -152,11 +159,27 @@ class SmartHouseRepository:
         """
         Saves the state of the given actuator in the database. 
         """
-        # TODO: Implement this method. You will probably need to extend the existing database structure: e.g.
-        #       by creating a new table (`CREATE`), adding some data to it (`INSERT`) first, and then issue
-        #       and SQL `UPDATE` statement. Remember also that you will have to call `commit()` on the `Connection`
-        #       stored in the `self.conn` instance variable.
-        pass
+        cur = self.cursor()
+        try:
+            # 1. Hent data fra objektet
+            # Sjekk om objektet har .id eller .device_id
+            dev_id = getattr(actuator, 'id', getattr(actuator, 'device_id', None))
+            
+            # Sjekk om objektet har .state eller .value (typisk i smarthus-oppgaver)
+            # Hvis du er usikker, bruk det du vet Actuator-klassen bruker
+            state_value = getattr(actuator, 'state', 0.0) 
+
+            # 2. SQL-spørring (Pass på at tabellnavnet er identisk med DBeaver)
+            sql = "INSERT OR REPLACE INTO actuator_states (device_id, state) VALUES (?, ?)"
+            
+            cur.execute(sql, (dev_id, state_value))
+            self.conn.commit()
+            
+        except sqlite3.Error as e:
+            print(f"Databasefeil: {e}")
+            self.conn.rollback()
+        finally:
+            cur.close()
 
 
     # statistics
