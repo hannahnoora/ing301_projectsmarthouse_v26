@@ -63,6 +63,11 @@ class SmartHouseRepository:
 
             floor = floors_by_level[floor_level]
             room = h.register_room(floor=floor, room_size=area, room_name=name)
+
+            # --- VIKTIG: DENNE LINJEN MÅ VÆRE MED ---
+            room.id = room_id 
+            # ----------------------------------------
+
             rooms_by_id[room_id] = room
 
         # 3. Devices: Her legger vi på LEFT JOIN for å få med 'state'
@@ -207,5 +212,48 @@ class SmartHouseRepository:
         the average recorded humidity in that room at that particular time.
         The result is a (possibly empty) list of number representing hours [0-23].
         """
-        # TODO: implement
-        return NotImplemented
+        cur = self.cursor()
+        
+        # Finn rom-ID
+        cur.execute("SELECT id FROM rooms WHERE name = ?", (room.room_name,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            return []
+        room_id = row["id"]
+
+        # SQL-logikk:
+        # 1. DailyAvg: Finn gjennomsnittet for dette rommet på akkurat denne datoen.
+        # 2. Hovedspørring: Finn timer på denne datoen med > 3 målinger over dags-gjennomsnittet.
+        query = """
+        WITH DailyAvg AS (
+            SELECT AVG(m.value) as avg_val
+            FROM measurements m
+            JOIN devices d ON m.device = d.id
+            WHERE d.room = ? 
+              AND date(m.ts) = ? 
+              AND m.unit = '%'
+        )
+        SELECT 
+            CAST(strftime('%H', m.ts) AS INTEGER) as hour
+        FROM measurements m
+        JOIN devices d ON m.device = d.id
+        CROSS JOIN DailyAvg da
+        WHERE d.room = ? 
+          AND date(m.ts) = ? 
+          AND m.unit = '%'
+          AND m.value > da.avg_val
+        GROUP BY hour
+        HAVING COUNT(*) > 3
+        ORDER BY hour
+        """
+
+        try:
+            cur.execute(query, (room_id, date, room_id, date))
+            rows = cur.fetchall()
+            return [r["hour"] for r in rows]
+        except Exception as e:
+            print(f"Feil: {e}")
+            return []
+        finally:
+            cur.close()
