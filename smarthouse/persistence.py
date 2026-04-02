@@ -251,14 +251,6 @@ class SmartHouseRepository:
 
 
 
-
-
-
-
-
-
-
-
     def calc_hours_with_humidity_above(self, room, date: str) -> list:
         """
         This function determines during which hours of the given day
