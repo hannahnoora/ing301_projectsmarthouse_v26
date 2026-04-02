@@ -125,7 +125,6 @@ class SmartHouseRepository:
         Returns None if the given object has no sensor readings.
         """
         # 1. Hent ut ID-en fra sensor-objektet (fungerer for både Sensor og Actuator)
-        # Vi antar her at domene-objektet har attributtet .id
         sensor_id = sensor.id
 
         # 2. Bruk den eksisterende cursor-metoden i klassen
@@ -174,7 +173,7 @@ class SmartHouseRepository:
             # Hvis du er usikker, bruk det du vet Actuator-klassen bruker
             state_value = getattr(actuator, 'state', 0.0) 
 
-            # 2. SQL-spørring (Pass på at tabellnavnet er identisk med DBeaver)
+
             sql = "INSERT OR REPLACE INTO actuator_states (device_id, state) VALUES (?, ?)"
             
             cur.execute(sql, (dev_id, state_value))
@@ -188,9 +187,8 @@ class SmartHouseRepository:
 
 
     # statistics
-
-    
-    def calc_avg_temperatures_in_room(self, room, from_date: Optional[str] = None, until_date: Optional[str] = None) -> dict:
+    def calc_avg_temperatures_in_room(self, room: Room, from_date: Optional[str] = None, until_date: Optional[str] = None) -> dict:
+        
         """Calculates the average temperatures in the given room for the given time range by
         fetching all available temperature sensor data (either from a dedicated temperature sensor 
         or from an actuator, which includes a temperature sensor like a heat pump) from the devices 
@@ -202,9 +200,65 @@ class SmartHouseRepository:
         """
         # TODO: This and the following statistic method are a bit more challenging. Try to design the respective 
         #       SQL statements first in a SQL editor like Dbeaver and then copy it over here.  
-        return NotImplemented
 
     
+        # 1. Hent hele huset "deep" for å finne ut hvilke enheter som er i rommet
+        # (Alternativt kan du spørre databasen direkte, men vi bruker domenemodellen her)
+        house = self.load_smarthouse_deep()
+        devices_in_room = house.get_devices(room)
+        
+        if not devices_in_room:
+            return {}
+
+        # Hent ID-ene til alle enhetene i dette rommet
+        device_ids = [d.id for d in devices_in_room]
+
+        # 2. Forbered SQL
+        # Vi bruker strftime for å gruppere på dato (YYYY-MM-DD) i SQLite
+        query = """
+            SELECT strftime('%Y-%m-%d', ts) as day, AVG(value) as avg_temp
+            FROM measurements
+            WHERE device IN ({})
+        """.format(','.join(['?'] * len(device_ids)))
+        
+        params = list(device_ids)
+
+        if from_date:
+            query += " AND ts >= ?"
+            params.append(from_date)
+        
+        if until_date:
+            # Vi legger til 23:59:59 for å inkludere hele den siste dagen
+            query += " AND ts <= ?"
+            params.append(f"{until_date} 23:59:59")
+
+        query += " GROUP BY day ORDER BY day ASC"
+
+        # 3. Kjør spørringen
+        cur = self.cursor()
+        result = {}
+        try:
+            cur.execute(query, params)
+            for row in cur.fetchall():
+                # row["day"] er dato-strengen, row["avg_temp"] er gjennomsnittet
+                result[row["day"]] = float(row["avg_temp"])
+        finally:
+            cur.close()
+
+        return result
+
+
+
+
+
+
+
+
+
+
+
+
+
     def calc_hours_with_humidity_above(self, room, date: str) -> list:
         """
         This function determines during which hours of the given day
