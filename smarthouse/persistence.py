@@ -45,14 +45,12 @@ class SmartHouseRepository:
         h = SmartHouse()
         cur = self.cursor()
 
-        # 1. Etasjer: fra rooms.floor
         cur.execute("SELECT DISTINCT floor FROM rooms ORDER BY floor")
         floors_by_level = {}
         for row in cur.fetchall():
             level = row["floor"]
             floors_by_level[level] = h.register_floor(level)
 
-        # 2. Rom: rooms(id, floor, area, name)
         cur.execute("SELECT id, floor, area, name FROM rooms ORDER BY id")
         rooms_by_id = {}
         for row in cur.fetchall():
@@ -64,13 +62,11 @@ class SmartHouseRepository:
             floor = floors_by_level[floor_level]
             room = h.register_room(floor=floor, room_size=area, room_name=name)
 
-            # --- VIKTIG: DENNE LINJEN MÅ VÆRE MED ---
+
             room.id = room_id 
-            # ----------------------------------------
 
             rooms_by_id[room_id] = room
 
-        # 3. Devices: Her legger vi på LEFT JOIN for å få med 'state'
         cur.execute("""
             SELECT d.id, d.room, d.kind, d.category, d.supplier, d.product, s.state
             FROM devices d
@@ -107,11 +103,9 @@ class SmartHouseRepository:
                     device_type=kind,
                     nickname=nickname
                 )
-                # NYTT: Her må vi faktisk sette tilstanden vi hentet fra databasen!
-                # Vi henter 'state' fra raden (takket være LEFT JOIN i SQL-en din)
+
                 db_state = row["state"]
                 if db_state is not None:
-                    # Sjekk om det heter .state eller .value i domain.py
                     device.state = db_state 
 
             h.register_device(room, device)
@@ -124,14 +118,11 @@ class SmartHouseRepository:
         Retrieves the most recent sensor reading for the given sensor if available.
         Returns None if the given object has no sensor readings.
         """
-        # 1. Hent ut ID-en fra sensor-objektet (fungerer for både Sensor og Actuator)
         sensor_id = sensor.id
 
-        # 2. Bruk den eksisterende cursor-metoden i klassen
         cur = self.cursor()
 
         try:
-            # 3. SQL-spørring for å finne den nyeste målingen basert på tidsstempel (ts)
             # Vi henter ts, value og unit fra measurements-tabellen
             query = """
                 SELECT ts, value, unit 
@@ -144,18 +135,13 @@ class SmartHouseRepository:
             cur.execute(query, (sensor_id,))
             row = cur.fetchone()
 
-            # 4. Hvis ingen rader blir funnet (f.eks. for en aktuator uten målinger), 
             # returneres None, som er det testen "test_basic_read_values" forventer.
             if row is None:
                 return None
 
-            # 5. Opprett og returner et Measurement-objekt fra domenemodellen.
-            # Siden row_factory er sqlite3.Row, kan vi bruke kolonnenavnene direkte.
-            # Domenemodellens Measurement forventer vanligvis (timestamp, value, unit)
             return Measurement(row["ts"], row["value"], row["unit"])
         
         finally:
-            # Lukk kun cursoren, ikke self.conn, slik at databasen forblir tilgjengelig
             cur.close()
 
 
@@ -165,12 +151,8 @@ class SmartHouseRepository:
         """
         cur = self.cursor()
         try:
-            # 1. Hent data fra objektet
-            # Sjekk om objektet har .id eller .device_id
             dev_id = getattr(actuator, 'id', getattr(actuator, 'device_id', None))
             
-            # Sjekk om objektet har .state eller .value (typisk i smarthus-oppgaver)
-            # Hvis du er usikker, bruk det du vet Actuator-klassen bruker
             state_value = getattr(actuator, 'state', 0.0) 
 
 
@@ -198,23 +180,16 @@ class SmartHouseRepository:
         The result should be a dictionary where the keys are strings representing dates (iso format) and 
         the values are floating point numbers containing the average temperature that day.
         """
-        # TODO: This and the following statistic method are a bit more challenging. Try to design the respective 
-        #       SQL statements first in a SQL editor like Dbeaver and then copy it over here.  
-
-    
-        # 1. Hent hele huset "deep" for å finne ut hvilke enheter som er i rommet
-        # (Alternativt kan du spørre databasen direkte, men vi bruker domenemodellen her)
-        house = self.load_smarthouse_deep()
-        devices_in_room = house.get_devices(room)
+        temp_devices = [
+            d for d in room.devices 
+            if "Temperature" in (d.device_type or "") or "Heat Pump" in (d.device_type or "")
+        ]
         
-        if not devices_in_room:
+        if not temp_devices:
             return {}
 
-        # Hent ID-ene til alle enhetene i dette rommet
-        device_ids = [d.id for d in devices_in_room]
+        device_ids = [d.id for d in temp_devices]
 
-        # 2. Forbered SQL
-        # Vi bruker strftime for å gruppere på dato (YYYY-MM-DD) i SQLite
         query = """
             SELECT strftime('%Y-%m-%d', ts) as day, AVG(value) as avg_temp
             FROM measurements
@@ -228,28 +203,21 @@ class SmartHouseRepository:
             params.append(from_date)
         
         if until_date:
-            # Vi legger til 23:59:59 for å inkludere hele den siste dagen
             query += " AND ts <= ?"
             params.append(f"{until_date} 23:59:59")
 
         query += " GROUP BY day ORDER BY day ASC"
 
-        # 3. Kjør spørringen
-        cur = self.cursor()
         result = {}
+        cur = self.cursor()
         try:
             cur.execute(query, params)
             for row in cur.fetchall():
-                # row["day"] er dato-strengen, row["avg_temp"] er gjennomsnittet
                 result[row["day"]] = float(row["avg_temp"])
         finally:
             cur.close()
 
         return result
-
-
-
-
 
     def calc_hours_with_humidity_above(self, room, date: str) -> list:
         """
@@ -268,7 +236,6 @@ class SmartHouseRepository:
             return []
         room_id = row["id"]
 
-        # SQL-logikk:
         # 1. DailyAvg: Finn gjennomsnittet for dette rommet på akkurat denne datoen.
         # 2. Hovedspørring: Finn timer på denne datoen med > 3 målinger over dags-gjennomsnittet.
         query = """
