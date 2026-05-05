@@ -75,7 +75,12 @@ class Actuator(Device):
         self.state = False 
 
     def is_active(self) -> bool:
-        return self.state is not False
+        # Hvis state er True (bool) eller en float høyere enn 0, er den aktiv
+        if isinstance(self.state, bool):
+            return self.state
+        if isinstance(self.state, (int, float)):
+            return self.state > 0
+        return False
 
 
 class ActuatorWithSensor(Actuator, Sensor):

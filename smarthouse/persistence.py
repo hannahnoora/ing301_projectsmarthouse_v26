@@ -10,7 +10,7 @@ class SmartHouseRepository:
 
     def __init__(self, file: str) -> None:
         self.file = file 
-        self.conn = sqlite3.connect(file, check_same_thread=False)
+        self.conn = sqlite3.connect(file, check_same_thread=False) #Oppretter forbindelse til databasefilen
 
     def __del__(self):
         self.conn.close()
@@ -74,14 +74,18 @@ class SmartHouseRepository:
         for dev in result.get_devices():
             if isinstance(dev, Actuator):
                 cursor.execute(f"SELECT state FROM states where device = '{dev.id}';")
-                state = cursor.fetchone()[0]
-                if state is None:
+                row = cursor.fetchone()  # Hent raden først
+                
+                if row is None:
+                    # Hvis enheten ikke finnes i 'states'-tabellen i det hele tatt
                     dev.turn_off()
-                elif float(state) == 1.0:
-                    dev.turn_on()
                 else:
-                    dev.turn_on(float(state))
-
+                    db_state = row[0] # Hent verdien fra databasen
+                    if db_state is None or float(db_state) == 0.0:
+                        dev.turn_off()
+                    else:
+                        # Hvis det er 1.0 eller en annen verdi (for varmepumpe)
+                        dev.turn_on(float(db_state))
 
         cursor.close()
         return result
@@ -109,25 +113,21 @@ limit 1;
 
 
     def update_actuator_state(self, actuator):
-        """
-        Saves the state of the given actuator in the database. 
-        """
         if isinstance(actuator, Actuator):
-            s = 'NULL'
-            if isinstance(actuator.state, float):
-                s = str(actuator.state)
-            elif actuator.state is True:
+            # Finn ut hva s skal være
+            if actuator.state is True:
                 s = '1.0'
-            query = f"""
-UPDATE states 
-SET state = {s}
-WHERE device = '{actuator.id}';
-        """
+            elif isinstance(actuator.state, float):
+                s = str(actuator.state)
+            else:
+                s = '0.0' # Dette må fange opp False!
+
+            query = f"INSERT OR REPLACE INTO states (device, state) VALUES ('{actuator.id}', {s});"
+            
             c = self.cursor()
             c.execute(query)
             self.conn.commit()
             c.close()
-
 
 
     # statistics
